@@ -85,7 +85,7 @@ class Tasks:
         print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<30}  {"-------":<20}  {"---------":<20}')
         for task in self.tasks:
             age = (date.today() - task.created).days
-            print(f'{task.unique_id:<40}  {age:<5}  {task.due_date if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<30}  {str(task.created):<20}  {str(task.completed) if task.completed else "-":<20}')
+            print(f'{task.unique_id:<40}  {age:<5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<30}  {str(task.created):<20}  {str(task.completed) if task.completed else "-":<20}')
          
 
    def done(self, unique_id):
