@@ -2,7 +2,7 @@ import argparse
 import pickle
 import uuid
 import re
-from datetime import date,timedelta
+from datetime import date, datetime
 
 
 class Task:
@@ -49,8 +49,7 @@ class Tasks:
    def pickle_load(self):
         try:
            with open(self.filename, 'rb') as f:
-              self.tasks = pickle.load(f)
-        
+              self.tasks = pickle.load(f)       
         except FileNotFoundError:
            self.tasks = []
            
@@ -71,23 +70,23 @@ class Tasks:
         non_completed_tasks.sort(key=lambda x: (x.due_date if x.due_date else date.max, x.priority))
 
         #print the table
-        print(f'{'ID':<100}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<50}')
-        print(f'{'--':<100}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<50}')
+        print(f'{'ID':<40}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<50}')
+        print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<50}')
 
         for task in non_completed_tasks:
             age = (date.today() - task.created).days
-            print(f'{task.unique_id:<100}  {age: <5}  {task.due_date if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
+            print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
 
 
    def report(self):
         self.tasks.sort(key=lambda x: (x.due_date if x.due_date else date.max, x.priority))
 
-        print(f'{'ID':<100}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<50}  {"Created":<50}  {"Completed":<50}')
-        print(f'{'--':<100}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<50}  {"-------":<50}  {"---------":<50}')
+        print(f'{'ID':<40}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<30}  {"Created":<20}  {"Completed":<20}')
+        print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<30}  {"-------":<20}  {"---------":<20}')
         for task in self.tasks:
-            age = timedelta(date.today() - task.created)
-            print(f'{task.unique_id: < 20}  {age: <5}  {task.due_date if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}  {task.created:<50}  {task.completed if task.completed else "-":<50}')
-            
+            age = (date.today() - task.created).days
+            print(f'{task.unique_id:<40}  {age:<5}  {task.due_date if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<30}  {str(task.created):<20}  {str(task.completed) if task.completed else "-":<20}')
+         
 
    def done(self, unique_id):
         for task in self.tasks:
@@ -105,10 +104,13 @@ class Tasks:
    def query(self):
         pass
 
-   def add(self, name, priority = 1, due_date = None):
+   def add(self, name, priority = 1, due_date=None):
+       if due_date:
+               due_date = datetime.strptime(due_date,'%Y-%m-%d').date()
+               print(due_date)    
        new_task = Task(name = name, priority=priority, due_date=due_date)
        self.tasks.append(new_task)
-       print(f'Created task {new_task.unique_id}')
+       print(f'Created task {new_task.unique_id} with due date {new_task.due_date}')
        self.pickle_dump()
 
 
@@ -116,7 +118,7 @@ def main():
      parser = argparse.ArgumentParser(description='Update your ToDo list.')
 
      parser.add_argument('--add', type = str, required=False, help='a task string to add to your list')
-     parser.add_argument('--due', type = str, required=False, help='due date in dd/mm/yyyy format')
+     parser.add_argument('--due', type = str, required=False, help='due date in yyyy-mm-dd format')
      parser.add_argument('--priority', type = int, required=False, default=1, help='priority of task; default value is 1')
      parser.add_argument('--delete', type = str, required=False, help='a task string delete from your list')
      parser.add_argument('--done', type = str, required=False, help='mark a task as done')
@@ -132,10 +134,16 @@ def main():
 
      if args.add:
          print(f'A new task {args.add} will be added to our to-do list with a priority of {args.priority}')
-         task_list.add(args.add, args.priority)
+         task_list.add(args.add, args.priority, args.due)
      elif args.list:
          print(f'all the tasks need to do')
          task_list.list()
+     elif args.delete:
+         task_list.delete(args.delete)
+     elif args.report:
+         task_list.report()
+     elif args.done:
+         task_list.done(args.done)
 
 
 if __name__ == '__main__':
