@@ -1,7 +1,6 @@
 import argparse
 import pickle
 import uuid
-import re
 from datetime import date, datetime
 
 
@@ -104,8 +103,9 @@ class Tasks:
    def query(self, user_input):
         query_result = []
         for task in self.tasks:
-            if user_input.lower() in task.name.lower():
-                query_result.append(user_input)
+            for item in user_input:
+               if item.lower() in task.name.lower():
+                    query_result.append(task)
         if query_result == []:
             print("no result founded.")
         else:
