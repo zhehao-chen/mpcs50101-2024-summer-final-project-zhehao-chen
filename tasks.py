@@ -101,8 +101,20 @@ class Tasks:
                self.tasks.remove(task)
        self.pickle_dump()
 
-   def query(self):
-        pass
+   def query(self, user_input):
+        query_result = []
+        for task in self.tasks:
+            if user_input.lower() in task.name.lower():
+                query_result.append(user_input)
+        if query_result == []:
+            print("no result founded.")
+        else:
+            print(f'{'ID':<40}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<50}')
+            print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<50}')
+            for task in query_result:
+                age = (date.today() - task.created).days
+                print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
+                
 
    def add(self, name, priority = 1, due_date=None):
        if due_date:
@@ -144,6 +156,8 @@ def main():
          task_list.report()
      elif args.done:
          task_list.done(args.done)
+     elif args.query:
+         task_list.query(args.query)
 
 
 if __name__ == '__main__':
