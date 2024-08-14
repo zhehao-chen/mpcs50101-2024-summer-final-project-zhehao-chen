@@ -16,6 +16,7 @@ class Task:
               - due date - date, this is optional
   """
   def __init__(self, name, unique_id = None, created = None, due_date = None, completed = None, priority = 1):
+     '''representation of a task'''
      #name
      self.name = name
      #priority
@@ -46,6 +47,7 @@ class Tasks:
         self.pickle_load()
     
    def pickle_load(self):
+        '''open a pickle file'''
         try:
            with open(self.filename, 'rb') as f:
               self.tasks = pickle.load(f)       
@@ -60,7 +62,7 @@ class Tasks:
 
     # Complete the rest of the methods, change the method definitions as needed
    def list(self):
-        '''print all the tasks in a formatted table'''
+        '''print all the non-completed tasks in a formatted table'''
 
         non_completed_tasks = []
         for task in self.tasks:
@@ -74,20 +76,22 @@ class Tasks:
 
         for task in non_completed_tasks:
             age = (date.today() - task.created).days
-            print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
+            print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date.strftime("%d/%m/%Y")) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
 
 
    def report(self):
+        '''print all the tasks including completed, not including deleted task'''
         self.tasks.sort(key=lambda x: (x.due_date if x.due_date else date.max, x.priority))
 
-        print(f'{'ID':<40}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<30}  {"Created":<20}  {"Completed":<20}')
-        print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<30}  {"-------":<20}  {"---------":<20}')
+        print(f'{'ID':<40}  {'Age': <5}  {'Due Date':<12}  {"Priority":<9}  {"Task":<30}  {"Created":<30}  {"Completed":<20}')
+        print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<30}  {"-------":<30}  {"---------":<20}')
         for task in self.tasks:
             age = (date.today() - task.created).days
-            print(f'{task.unique_id:<40}  {age:<5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<30}  {str(task.created):<20}  {str(task.completed) if task.completed else "-":<20}')
+            print(f'{task.unique_id:<40}  {age:<5}  {str(task.due_date.strftime("%d/%m/%Y")) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<30}  {str(task.created.strftime("%a %b %d %H:%M:%S CST %Y")):<30}  {str(task.completed.strftime("%a %b %d %H:%M:%S CST %Y")) if task.completed else "-":<30}')
          
 
    def done(self, unique_id):
+        '''mark a task as complete'''
         for task in self.tasks:
             if task.unique_id == unique_id:
                 task.completed = date.today()
@@ -95,12 +99,14 @@ class Tasks:
 
 
    def delete(self, unique_id):
+       '''delete a task'''
        for task in self.tasks:
            if task.unique_id == unique_id:
                self.tasks.remove(task)
        self.pickle_dump()
 
    def query(self, user_input):
+        '''query a key word or multipe key words in the task list'''
         query_result = []
         for task in self.tasks:
             for item in user_input:
@@ -113,24 +119,38 @@ class Tasks:
             print(f'{'--':<40}  {'---': <5}  {'--------':<12}  {"--------":<9}  {"----":<50}')
             for task in query_result:
                 age = (date.today() - task.created).days
-                print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
+                print(f'{task.unique_id:<40}  {age: <5}  {str(task.due_date.strftime("%d/%m/%Y")) if task.due_date else "-":<12}  {task.priority:<9}  {task.name:<50}')
                 
 
    def add(self, name, priority = 1, due_date=None):
-       if due_date:
-               due_date = datetime.strptime(due_date,'%Y-%m-%d').date()
-               print(due_date)    
-       new_task = Task(name = name, priority=priority, due_date=due_date)
-       self.tasks.append(new_task)
-       print(f'Created task {new_task.unique_id} with due date {new_task.due_date}')
-       self.pickle_dump()
+       '''add a new task'''
+       def int_check(name):
+          try:
+               int(name)
+               return True
+          except ValueError:
+               return False
+          
+       if int_check(name) == True:
+          return print('There was an error in creating your task. Run "todo -h" for usage instructions.')
+       else:
+          if due_date:
+               try:
+                    due_date = datetime.strptime(due_date,'%d/%m/%Y').date()
+               except ValueError:
+                    return print('Please enter the due date in the format of mm/dd/yyyy')
+                   
+          new_task = Task(name = name, priority=priority, due_date=due_date)
+          self.tasks.append(new_task)
+          print(f'Created task {new_task.unique_id} with due date {new_task.due_date.strftime("%d/%m/%Y")}')
+          self.pickle_dump()
 
 
 def main():
      parser = argparse.ArgumentParser(description='Update your ToDo list.')
 
      parser.add_argument('--add', type = str, required=False, help='a task string to add to your list')
-     parser.add_argument('--due', type = str, required=False, help='due date in yyyy-mm-dd format')
+     parser.add_argument('--due', type = str, required=False, help='due date in mm/dd/yyyy format')
      parser.add_argument('--priority', type = int, required=False, default=1, help='priority of task; default value is 1')
      parser.add_argument('--delete', type = str, required=False, help='a task string delete from your list')
      parser.add_argument('--done', type = str, required=False, help='mark a task as done')
@@ -145,7 +165,6 @@ def main():
      task_list = Tasks()
 
      if args.add:
-         print(f'A new task {args.add} will be added to our to-do list with a priority of {args.priority}')
          task_list.add(args.add, args.priority, args.due)
      elif args.list:
          print(f'all the tasks need to do')
